@@ -1,0 +1,222 @@
+resource "random_string" "lo_connect_password" {
+  length           = 12
+  special          = false
+  # override_special = "@£$"
+}
+
+## Prevent deployment of both Splunk Ent and Splunk Cloud
+resource "null_resource" "validate_scenario" {
+  count = var.splunk_cloud_enabled && var.splunk_ent_count == "1" ? 1 : 0
+
+  provisioner "local-exec" {
+    command = "echo 'Invalid configuration: splunk_cloud_enabled cannot be true when splunk_ent_count is 1.' && exit 1"
+  }
+}
+
+resource "aws_instance" "splunk_ent" {
+  count                     = var.splunk_ent_count
+  ami                       = var.ami
+  instance_type             = var.splunk_ent_inst_type
+  subnet_id                 = "${var.public_subnet_ids[ count.index % length(var.public_subnet_ids) ]}"
+  associate_public_ip_address = true
+  private_ip                = var.splunk_private_ip
+  key_name                  = var.key_name
+  vpc_security_group_ids    = [
+    aws_security_group.instances_sg.id,
+    aws_security_group.splunk_ent_sg.id,
+  ]
+  iam_instance_profile      = var.ec2_instance_profile_name
+  
+  root_block_device {
+    volume_size = 32
+    volume_type = "gp3"
+    encrypted   = true
+    delete_on_termination = true
+
+    tags = {
+      Name                          = lower(join("-", [var.environment, "splunk-enterprise", "root"]))
+      splunkit_environment_type     = "non-prd"
+      splunkit_data_classification  = "private"
+    }
+  }
+  
+  tags = {
+    Name = lower(join("-",[var.environment, "splunk-enterprise", count.index + 1]))
+    Environment = lower(var.environment)
+    splunkit_environment_type = "non-prd"
+    splunkit_data_classification = "private"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+    ## Set Hostname and update
+      "sudo sed -i 's/127.0.0.1.*/127.0.0.1 ${self.tags.Name}.local ${self.tags.Name} localhost/' /etc/hosts",
+      "sudo hostnamectl set-hostname ${self.tags.Name}",
+      "sudo apt-get update",
+      "sudo apt-get upgrade -y",
+    
+    ## Install AWS CLI
+      "curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip",
+      "sudo apt install unzip -y",
+      "unzip awscliv2.zip",
+      "sudo ./aws/install",
+
+    ## Sync Non Public Files from S3
+      "aws s3 cp s3://${var.s3_bucket_name}/scripts/install_splunk_enterprise.sh /tmp/install_splunk_enterprise.sh",
+      "aws s3 cp s3://${var.s3_bucket_name}/scripts/certs.sh /tmp/certs.sh",
+      "aws s3 cp s3://${var.s3_bucket_name}/scripts/configure_splunk_opamp.sh /tmp/configure_splunk_opamp.sh",
+      "aws s3 cp s3://${var.s3_bucket_name}/scripts/update_splunk_otel_collector.sh /tmp/update_splunk_otel_collector.sh",
+      "aws s3 cp s3://${var.s3_bucket_name}/scripts/install_nodejs_22.sh /tmp/install_nodejs_22.sh",
+      "aws s3 cp s3://${var.s3_bucket_name}/scripts/install_otel_demo_studio_viz.sh /tmp/install_otel_demo_studio_viz.sh",
+
+      "aws s3 cp s3://${var.s3_bucket_name}/config_files/splunkent_agent_config.yaml /tmp/agent_config.yaml",
+      "aws s3 cp s3://${var.s3_bucket_name}/config_files/inputs.conf /tmp/inputs.conf",
+      "aws s3 cp s3://${var.s3_bucket_name}/config_files/splunk_ta_sim_tessa_jane_inputs.conf /tmp/splunk_ta_sim_tessa_jane_inputs.conf",
+      "aws s3 sync s3://${var.s3_bucket_name}/splunk_apps/otel_demo_studio_viz /tmp/otel_demo_studio_viz",
+
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_enterprise_license_filename} /tmp/${var.splunk_enterprise_license_filename}",
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_itsi_license_filename} /tmp/${var.splunk_itsi_license_filename}",
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_app_for_content_packs_filename} /tmp/${var.splunk_app_for_content_packs_filename}",
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_it_service_intelligence_filename} /tmp/${var.splunk_it_service_intelligence_filename}",
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_infrastructure_monitoring_add_on_filename} /tmp/${var.splunk_infrastructure_monitoring_add_on_filename}",
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_ai_toolkit_filename} /tmp/${var.splunk_ai_toolkit_filename}",
+      "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/${var.splunk_connect_for_otlp_filename} /tmp/${var.splunk_connect_for_otlp_filename}",
+      # "aws s3 cp s3://${var.s3_bucket_name}/non_public_files/itsi-installer.sh /tmp/itsi-installer.sh",
+
+    ## Create Splunk Ent Vars
+      "TOKEN=${var.access_token}",
+      "REALM=${var.realm}",
+      "HOSTNAME=${self.tags.Name}",
+      "LBURL=${aws_lb.gateway-lb.dns_name}",
+      "SPLUNK_PASSWORD=${var.splunk_admin_pwd}",
+      "LO_CONNECT_PASSWORD=${random_string.lo_connect_password.result}",
+      "SPLUNK_ENT_VERSION=${var.splunk_ent_version}",
+      "SPLUNK_FILENAME=${var.splunk_ent_filename}",
+      "SPLUNK_ENTERPRISE_LICENSE_FILE=${var.splunk_enterprise_license_filename}",
+      "ADD_ITSI=${var.add_itsi_splunk_enterprise}",
+      "SPLUNK_AI_TOOLKIT_FILENAME=${var.splunk_ai_toolkit_filename}",
+      "SPLUNK_CONNECT_FOR_OTLP_FILENAME=${var.splunk_connect_for_otlp_filename}",
+    ## Write env vars to file (used for debugging)
+      "echo $SPLUNK_PASSWORD > /tmp/splunk_password",
+      "echo $LO_CONNECT_PASSWORD > /tmp/lo_connect_password",
+      "echo $SPLUNK_ENT_VERSION > /tmp/splunk_ent_version",
+      "echo $SPLUNK_FILENAME > /tmp/splunk_filename",
+      "echo $SPLUNK_ENTERPRISE_LICENSE_FILE > /tmp/splunk_enterprise_license_filename",
+      "echo $LBURL > /tmp/lburl",
+      "echo $ADD_ITSI > /tmp/add_itsi",
+
+    ## Install Splunk
+      "sudo chmod +x /tmp/install_splunk_enterprise.sh",
+      "sudo /tmp/install_splunk_enterprise.sh $SPLUNK_PASSWORD $SPLUNK_ENT_VERSION $SPLUNK_FILENAME $LO_CONNECT_PASSWORD",
+
+    ## install NFR license
+      "sudo mkdir -p /opt/splunk/etc/licenses/enterprise",
+      "sudo cp /tmp/${var.splunk_enterprise_license_filename} /opt/splunk/etc/licenses/enterprise/${var.splunk_enterprise_license_filename}.lic",
+      "sudo chown -R splunk:splunk /opt/splunk/etc/licenses",
+      "sudo systemctl restart Splunkd",
+
+    ## Prep Certs Script
+      "sudo chmod +x /tmp/certs.sh",
+      
+    ## Install Apps
+      "sudo tar -xvf /tmp/${var.splunk_infrastructure_monitoring_add_on_filename} -C /opt/splunk/etc/apps",
+      "sudo tar -xvf /tmp/${var.splunk_ai_toolkit_filename} -C /opt/splunk/etc/apps",
+      "sudo tar -xvf /tmp/${var.splunk_connect_for_otlp_filename} -C /opt/splunk/etc/apps",
+      "sudo chown -R splunk:splunk /opt/splunk/etc/apps",
+      "sudo systemctl restart Splunkd",
+
+    ## Node.js 22 LTS (Ubuntu apt ships 18.x; Splunk MCP / npx need v22.20.0+)
+      "sudo chmod +x /tmp/install_nodejs_22.sh",
+      "sudo /tmp/install_nodejs_22.sh",
+
+    ## Boat Electrical Studio dashboards + glass table
+      "sudo chmod +x /tmp/install_otel_demo_studio_viz.sh",
+      "sudo SIM_REALM='${var.realm}' SIM_ACCESS_TOKEN='${var.access_token}' /tmp/install_otel_demo_studio_viz.sh \"$SPLUNK_PASSWORD\" ${var.splunk_sim_org_id}",
+
+    ## Install ITSI, but only if add_itsi_splunk_enterprise = true
+      <<-EOT
+      if [ "${var.add_itsi_splunk_enterprise}" = "true" ]; then
+        ## Create Splunk Ent Vars
+        ITSI_LIC="${var.splunk_itsi_license_filename}"
+        ITSI_APP="${var.splunk_it_service_intelligence_filename}"
+        CP_APP="${var.splunk_app_for_content_packs_filename}"
+
+        ## install ITSI NFR license
+        sudo cp /tmp/$ITSI_LIC /opt/splunk/etc/licenses/enterprise/$ITSI_LIC.lic
+        sudo chown -R splunk:splunk /opt/splunk/etc/licenses
+    
+        ## install java
+        sudo apt install -y default-jre
+        # Use backticks instead of $() to be compatible with all shells
+        JAVA_HOME=`realpath /usr/bin/java` 
+
+        ## stop splunk
+        sudo systemctl stop Splunkd
+
+        ## install apps
+        sudo tar -xvf /tmp/$ITSI_APP -C /opt/splunk/etc/apps
+        sudo tar -xvf /tmp/$CP_APP -C /opt/splunk/etc/apps
+
+        ## --- THE FIX FOR PYTHON 3.13 / SPLUNK 10.2 --- ##
+        echo "Patching ITSI for Python 3.13 compatibility..."
+        sudo sed -i 's/\^(?u)/(?u)\^/g' /opt/splunk/etc/apps/SA-ITOA/lib/ITOA/itoa_common.py
+        ## --------------------------------------------- ##
+
+        ## ensure inputs.conf reflects in the UI
+        sudo mkdir -p /opt/splunk/etc/apps/itsi/local
+        sudo cp /tmp/inputs.conf /opt/splunk/etc/apps/itsi/local/inputs.conf
+
+        ## ensure rights are given to splunk user
+        sudo chown -R splunk:splunk /opt/splunk/etc/apps
+
+        ## start splunk
+        sudo systemctl start Splunkd
+      else
+        echo "Skipping ITSI as add_itsi_splunk_enterprise is false"
+      fi
+      EOT
+      ,
+
+      # The viz script writes the SIM account, then this ITSI block stops
+      # Splunk. On a fresh install that KV write does not survive the restart,
+      # so configure the account again once Splunk is back up.
+      "sudo SIM_REALM='${var.realm}' SIM_ACCESS_TOKEN='${var.access_token}' /tmp/install_otel_demo_studio_viz.sh --configure-sim-account \"$SPLUNK_PASSWORD\" ${var.splunk_sim_org_id}",
+
+    # Install Otel Agent
+      "sudo curl -sSL https://dl.signalfx.com/splunk-otel-collector.sh > /tmp/splunk-otel-collector.sh",
+      "sudo sh /tmp/splunk-otel-collector.sh --realm ${var.realm}  -- ${var.access_token} --mode agent",
+      "sudo chmod +x /tmp/update_splunk_otel_collector.sh",
+      "sudo /tmp/update_splunk_otel_collector.sh ${aws_lb.gateway-lb.dns_name}",
+      "sudo mv /etc/otel/collector/agent_config.yaml /etc/otel/collector/agent_config.bak",
+      "sudo mv /tmp/agent_config.yaml /etc/otel/collector/agent_config.yaml",
+      "sudo chown splunk-otel-collector:splunk-otel-collector agent_config.yaml",
+      "sudo systemctl restart splunk-otel-collector",
+    ]
+  }
+
+  connection {
+    host        = self.public_ip
+    port        = 22
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file(var.private_key_path)
+    agent       = "true"
+    timeout     = "5m"
+  }
+}
+
+output "lo_connect_password" {
+  value = random_string.lo_connect_password.result
+}
+
+output "splunk_password" {
+  value = var.splunk_admin_pwd
+}
+
+output "splunk_enterprise_private_ip" {
+    value =  formatlist(
+    "%s, %s",
+    aws_instance.splunk_ent.*.tags.Name,
+    aws_instance.splunk_ent.*.private_ip,
+  )
+}

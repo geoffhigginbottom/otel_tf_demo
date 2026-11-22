@@ -1,0 +1,570 @@
+# Default configuration file for the Linux (deb/rpm) and Windows MSI collector packages
+
+# If the collector is installed without the Linux/Windows installer script, the following
+# environment variables are required to be manually defined or configured below:
+# - SPLUNK_ACCESS_TOKEN: The Splunk access token to authenticate requests
+# - SPLUNK_API_URL: The Splunk API URL, e.g. https://api.us0.observability.splunkcloud.com
+# - SPLUNK_HEC_TOKEN: The Splunk HEC authentication token
+# - SPLUNK_HEC_URL: The Splunk HEC endpoint URL, e.g. https://http-inputs-acme.splunkcloud.com/services/collector
+# - SPLUNK_INGEST_URL: The Splunk ingest URL, e.g. https://ingest.us0.observability.splunkcloud.com
+# - SPLUNK_LISTEN_INTERFACE: The network interface the agent receivers listen on.
+
+extensions:
+  headers_setter:
+    headers:
+      - action: upsert
+        key: X-SF-TOKEN
+        from_context: X-SF-TOKEN
+        default_value: "${SPLUNK_ACCESS_TOKEN}"
+
+  health_check:
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:13133"
+
+  http_forwarder:
+    ingress:
+      endpoint: "${SPLUNK_LISTEN_INTERFACE}:6060"
+    egress:
+      # endpoint: "${SPLUNK_API_URL}"
+      # Use instead when sending to gateway
+      endpoint: "http://${SPLUNK_GATEWAY_URL}"
+
+  http_forwarder/opamp_splunk_o11y:
+    ingress:
+      endpoint: "${SPLUNK_LISTEN_INTERFACE}:4320"
+    egress:
+      # endpoint: "${SPLUNK_INGEST_URL}"
+      # Use instead when sending to gateway
+      endpoint: "http://${SPLUNK_GATEWAY_URL}:4320"
+      # Remove this header to use a token passed by the caller instead.
+      headers:
+        X-SF-Token: "${SPLUNK_ACCESS_TOKEN}"
+
+  # opamp/splunk_o11y is included in the default config, but startup removes it
+  # from service.extensions unless --feature-gates=+splunk.opamp.enabled is set.
+  opamp/splunk_o11y:
+    agent_description:
+      # Include the Collector's resource attributes as OpAMP non-identifying attributes.
+      include_resource_attributes: true
+    server:
+      http:
+        # endpoint: "${SPLUNK_INGEST_URL}/v1/opamp"
+        # Use instead when sending to gateway (assuming the gateway is running http_forwarder/signalfx on port 4320)
+        endpoint: "http://${SPLUNK_GATEWAY_URL}:4320/v1/opamp"
+        polling_interval: 30s
+        headers:
+          X-SF-Token: "${SPLUNK_ACCESS_TOKEN}"
+
+  opamp/splunk_enterprise:
+    server:
+      http:
+        endpoint: "https://${SPLUNK_ENTERPRISE_URL}/services/tenant/agent-management/v2/opamp/otel"
+        tls:
+          insecure_skip_verify: true
+        headers:
+          Authorization: "${SPLUNK_OPAMP_TOKEN}"
+
+  zpages:
+    #endpoint: "${SPLUNK_LISTEN_INTERFACE}:55679"
+    expvar:
+      enabled: true
+
+  # Storage extension for storing filelog checkpoints.
+  # Checkpoints allow the receiver to pick up where it left off in the case of a
+  # collector restart.
+  file_storage/filelogs:
+    # Location where checkpoint files are stored. This directory must be writable
+    # by the collector.
+    directory: "${SPLUNK_FILE_STORAGE_EXTENSION_PATH}"
+    compaction:
+      on_start: true
+      directory: /tmp/
+    create_directory: true
+
+receivers:
+  fluent_forward:
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:8006"
+  host_metrics:
+    collection_interval: 1s
+    scrapers:
+      cpu:
+      disk:
+      filesystem:
+      memory:
+      network:
+      # System load average metrics https://en.wikipedia.org/wiki/Load_(computing)
+      load:
+      # Paging/Swap space utilization and I/O metrics
+      paging:
+      # Aggregated system process count metrics
+      processes:
+      # System processes metrics, disabled by default
+      process:
+        mute_process_exe_error: true
+        mute_process_io_error: true
+        mute_process_user_error: true
+        include:
+          names:
+            - otelcol
+            - mysqld
+          match_type: strict
+        metrics:
+          process.cpu.utilization:
+            enabled: true
+          process.memory.utilization:
+            enabled: true
+
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:14250"
+      thrift_binary:
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:6832"
+      thrift_compact:
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:6831"
+      thrift_http:
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:14268"
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:4317"
+        # Uncomment below config to preserve incoming access token and use it instead of the token value set in exporter config
+        # include_metadata: true
+      http:
+        endpoint: "${SPLUNK_LISTEN_INTERFACE}:4318"
+        # Uncomment below config to preserve incoming access token and use it instead of the token value set in exporter config
+        # include_metadata: true
+
+  # This section is used to collect the OpenTelemetry Collector metrics
+  # Even if just a Splunk APM customer, these metrics are included
+  prometheus/internal:
+    config:
+      scrape_configs:
+      - job_name: 'otel-collector'
+        scrape_interval: 10s
+        static_configs:
+        - targets: ["0.0.0.0:8888"]
+        metric_relabel_configs:
+          - source_labels: [ __name__ ]
+            regex: 'promhttp_metric_handler_errors.*'
+            action: drop
+          - source_labels: [ __name__ ]
+            regex: 'otelcol_processor_batch_.*'
+            action: drop
+
+  smartagent/processlist:
+    type: processlist
+
+  zipkin:
+    endpoint: "${SPLUNK_LISTEN_INTERFACE}:9411"
+
+  nop:
+
+### File Logs Receivers - Start ###
+  # MySQL server error log. Contains critical errors that occurred during the
+  # server's operation, table corruption, start and stop information.
+  # When running under Systemd, error logging goes to journald. To enable
+  # logging to a file, use the log_error variable.
+  # See https://mariadb.com/kb/en/error-log/
+  file_log/mysql-error:
+    include: [ "/var/log/mysql/error.log" ]
+    multiline:
+      # e.g. "2023-10-09 13:40:48 0 [Note] ..."
+      line_start_pattern: '^[\w-]+ [\d:.]+ \w+ \[\w+\]'
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>.+?) \d+ \[(?P<level>\w+)\] (?P<log>[\s\S]*)$'
+        timestamp:
+          parse_from: attributes.time
+          layout: '%Y-%m-%d %H:%M:%S'
+        severity:
+          parse_from: attributes.level
+      - type: move
+        from: attributes.log
+        to: body
+      - type: retain
+        fields:
+          - attributes["log.file.path"]
+    include_file_name: false
+    include_file_path: true
+    storage: file_storage/filelogs
+
+  # MySQL general query log. Contains a log of every SQL query received from a
+  # client, as well as each client connect and disconnect.
+  # Disabled by default. To enable, use the general_log_file variable.
+  # See https://mariadb.com/kb/en/general-query-log/
+  file_log/mysql-query:
+    include: [ "/var/log/mysql.log", "/var/log/mysql/mysql.log" ]
+    multiline:
+      line_start_pattern: '^\d{6} [\d:.]+'
+    operators:
+      - type: router
+        routes:
+          - output: parse_query_log
+            expr: 'body matches "^\\d+"'
+      - type: regex_parser
+        id: parse_query_log
+        regex: '^(?P<time>\d{6} [\d:.]+)\s+(?P<log>[\s\S]*)$'
+        timestamp:
+          parse_from: attributes.time
+          layout: '%y%m%d %H:%M:%S'
+      - type: move
+        from: attributes.log
+        to: body
+      - type: retain
+        fields:
+          - attributes["log.file.path"]
+    include_file_name: false
+    include_file_path: true
+    storage: file_storage/filelogs
+
+  # MySQL slow query log. Contains a log of SQL queries that took a long time to perform.
+  # Disabled by default. To enable, use the slow_query_log variable.
+  # See https://mariadb.com/kb/en/slow-query-log/
+  file_log/mysql-slow_query:
+    include: [ "/var/log/mysql/mysql-slow.log", "/var/log/mysql/mariadb-slow.log" ]
+    multiline:
+      line_start_pattern: '^# Time: '
+    include_file_name: false
+    include_file_path: true
+    storage: file_storage/filelogs
+
+
+  # Syslog and messages log files.
+  # These are not in the RFC3164 format.
+  file_log/syslog:
+    include: [ "/var/log/syslog"]
+    operators:
+      - type: regex_parser
+        regex: '^(?P<time>.+?) (?P<hostname>\S+) (?P<program>[^ :\[]+)\[?(?P<pid>\d+)?\]?: (?P<log>.*)$'
+        timestamp:
+          parse_from: attributes.time
+          layout: '%b %e %H:%M:%S'
+      - type: move
+        from: attributes.log
+        to: body
+      - type: retain
+        fields:
+          - attributes.program
+          - attributes["log.file.path"]
+    include_file_name: false
+    include_file_path: true
+    storage: file_storage/filelogs
+
+ ### File Logs Receivers - End ###
+
+  
+        
+# ## MySQL Specific Receivers - removed as now using auto discovery
+#   smartagent/mysql:
+#     type: collectd/mysql
+#     host: 127.0.0.1
+#     port: 3306
+#     databases:
+#       - name:
+#     username: ${MYSQL_USER}
+#     password: ${MYSQL_USER_PWD}
+
+#   mysql:
+#     endpoint: localhost:3306
+#     username: ${MYSQL_USER}
+#     password: ${MYSQL_USER_PWD}
+#     collection_interval: 10s
+#     initial_delay: 1s
+#     statement_events:
+#       digest_text_limit: 120
+#       time_limit: 24h
+#       limit: 250
+#     metrics:
+#       mysql.query.slow.count:
+#         enabled: true
+#       mysql.query.count:
+#         enabled: true
+
+processors:
+  batch:
+    metadata_keys:
+      - X-SF-Token
+
+  # Enabling the memory_limiter is strongly recommended for every pipeline.
+  # Configuration is based on the amount of memory allocated to the collector.
+  # For more information about memory limiter, see
+  # https://github.com/open-telemetry/opentelemetry-collector/blob/main/processor/memorylimiter/README.md
+  memory_limiter:
+    check_interval: 2s
+    limit_mib: ${SPLUNK_MEMORY_LIMIT_MIB}
+
+  # Detect if the collector is running on a cloud system, which is important for creating unique cloud provider dimensions.
+  # Detector order is important: the `system` detector goes last so it can't preclude cloud detectors from setting host/os info.
+  # Resource detection processor is configured to override all host and cloud attributes because instrumentation
+  # libraries can send wrong values from container environments.
+  # https://docs.splunk.com/Observability/gdi/opentelemetry/components/resourcedetection-processor.html#ordering-considerations
+  resource_detection:
+    detectors: [gcp, ecs, ec2, azure, system]
+    override: true
+
+  # Limit explicit histograms to at most 32 buckets before export through signalfx exporter.
+  # With `send_otlp_histograms: true`, the backend drops histograms above this limit.
+  # With `send_otlp_histograms: false`, this reduces the emitted `_bucket` series and `le` boundaries.
+  transform/limit_histogram_buckets:
+    metric_statements:
+      - context: datapoint
+        statements:
+          - merge_histogram_buckets(32, method="limit_buckets")
+
+  # Optional: The following processor can be used to add a default "deployment.environment.name" attribute to the logs and
+  # traces when it's not populated by instrumentation libraries.
+  # If enabled, make sure to enable this processor in a pipeline.
+  # To use the deprecated attribute, change the key to "deployment.environment".
+  # For more information, see https://docs.splunk.com/Observability/gdi/opentelemetry/components/resource-processor.html
+  #resource/add_environment:
+    #attributes:
+      #- action: insert
+        #value: staging/production/...
+        #key: deployment.environment.name
+
+  metricstransform:
+    transforms:
+      - include: ^mysql\.
+        match_type: regexp
+        action: update
+        operations:
+          - action: add_label
+            new_label: agent_version
+            new_value: version {{version}}
+      - include: ^system\.
+        match_type: regexp
+        action: update
+        operations:
+          - action: add_label
+            new_label: agent_version
+            new_value: version {{version}}
+
+  transform/splunk_metadata:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - set(log.attributes["com.splunk.sourcetype"], "mysql:plus:error") where log.attributes["log.file.path"] == "/var/log/mysql/error.log"
+          - set(log.attributes["com.splunk.sourcetype"], "mysql:plus:query") where log.attributes["log.file.path"] == "/var/log/mysql/mysql.log"
+          - set(log.attributes["com.splunk.sourcetype"], "mysql:plus:mysql-slow") where log.attributes["log.file.path"] == "/var/log/mysql/mysql-slow.log"
+          - set(log.attributes["com.splunk.sourcetype"], "syslog") where log.attributes["log.file.path"] == "/var/log/syslog"
+
+          - set(log.attributes["com.splunk.index"], "otel-logs") where log.attributes["log.file.path"] == "/var/log/syslog"
+          - set(log.attributes["com.splunk.index"], "otel-logs") where log.attributes["log.file.path"] == "/var/log/mysql/error.log"
+          - set(log.attributes["com.splunk.index"], "otel-logs") where log.attributes["log.file.path"] == "/var/log/mysql/mysql.log"
+          - set(log.attributes["com.splunk.index"], "otel-logs") where log.attributes["log.file.path"] == "/var/log/mysql/mysql-slow.log"
+          
+          # Map the log.file.path to the Splunk 'source' field
+          - set(log.attributes["com.splunk.source"], log.attributes["log.file.path"]) where log.attributes["log.file.path"] != nil
+
+exporters:
+  # Traces
+  otlp_http:
+    traces_endpoint: "${SPLUNK_INGEST_URL}/v2/trace/otlp"
+    headers:
+      "X-SF-Token": "${SPLUNK_ACCESS_TOKEN}"
+    auth:
+      authenticator: headers_setter
+  # Metrics + Events
+  signalfx:
+    access_token: "${SPLUNK_ACCESS_TOKEN}"
+    # api_url: "${SPLUNK_API_URL}"
+    # ingest_url: "${SPLUNK_INGEST_URL}"
+    # Use instead when sending to gateway
+    api_url: http://${SPLUNK_GATEWAY_URL}:6060
+    ingest_url: http://${SPLUNK_GATEWAY_URL}:9943
+    sync_host_metadata: true
+    correlation:
+
+  # Entities (applicable only if discovery mode is enabled)
+  otlp_http/entities:
+    logs_endpoint: "${SPLUNK_INGEST_URL}/v3/event"
+    headers:
+      "X-SF-Token": "${SPLUNK_ACCESS_TOKEN}"
+    auth:
+      authenticator: headers_setter
+
+  # Logs
+  splunk_hec:
+    token: "${SPLUNK_HEC_TOKEN}"
+    endpoint: "${SPLUNK_HEC_URL}"
+    source: "otel" # Will only take effect if the incoming log doesn't have "com.splunk.source" attribute set by the transform processor
+    sourcetype: "otel" # Will only take effect if the incoming log doesn't have "com.splunk.sourcetype" attribute set by the transform processor
+    # index: "main" # Optional: specify the index to send logs to. If not set, it will go to the default index configured in HEC.
+    # host: "otel-collector" # Optional: specify the host field for incoming logs. If not set, it will use the host from which the log was sent or "unknown" if not available.
+    # batch_max_size: 1024 # Optional: maximum number of logs to include in a batch before sending to HEC. Default is 1024.
+    # batch_timeout: 5s # Optional: maximum amount of time to wait before sending a batch of logs to HEC. Default is 5s.
+    # retry_on_failure: true # Optional: whether to retry sending logs to HEC if the initial attempt fails. Default is true.
+    # max_retries: 3 # Optional: maximum number of retry attempts if sending logs to HEC fails. Default is 3.
+    # retry_delay: 5s # Optional: amount of time to wait between retry attempts if sending logs to HEC fails. Default is 5s.
+    # tls:
+    #   insecure: true # Optional: whether to skip TLS certificate verification when sending logs to HEC. Default is false.  
+    profiling_data_enabled: false
+
+  otlp_http/logs:
+    endpoint: "http://${SPLUNK_OTLP_URL}:4318"
+    headers:
+      authorization: "Splunk ${SPLUNK_HEC_TOKEN}"
+
+  otlp_grpc/logs:
+    endpoint: "${SPLUNK_OTLP_URL}:4317"
+    tls:
+      insecure: true
+    headers:
+      authorization: "Splunk ${SPLUNK_HEC_TOKEN}"
+
+  # # HEC Metrics
+  # splunk_hec/metrics:
+  #   token: "${SPLUNK_HEC_METRICS_TOKEN}"
+  #   endpoint: "${SPLUNK_HEC_URL}"
+  #   #source: "otel"
+  #   #sourcetype: "otel"
+  #   profiling_data_enabled: false
+
+  # Profiling
+  splunk_hec/profiling:
+    token: "${SPLUNK_ACCESS_TOKEN}"
+    endpoint: "${SPLUNK_INGEST_URL}/v1/log"
+    log_data_enabled: false
+
+  # Send to gateway
+  otlp_http/gateway:
+    endpoint: http://${SPLUNK_GATEWAY_URL}:4318
+    headers:
+      "X-SF-Token": "${SPLUNK_ACCESS_TOKEN}"
+    auth:
+      authenticator: headers_setter
+
+  otlp_grpc/gateway:
+    endpoint: "${SPLUNK_GATEWAY_URL}:4317"
+    tls:
+      insecure: true
+    auth:
+      authenticator: headers_setter
+
+  # Debug
+  debug:
+    verbosity: detailed
+
+service:
+  telemetry:
+    logs:
+      level: ${env:SPLUNK_COLLECTOR_LOG_LEVEL:-info}
+    # Resource attributes attached to the Collector's internal telemetry. These
+    # are also exposed via OpAMP when the opamp/splunk_o11y extension is enabled
+    # with agent_description.include_resource_attributes set to true.
+    resource:
+      attributes:
+        - name: otelcol.service.mode
+          value: agent
+        # Optional: Add a deployment environment to the Collector's internal telemetry.
+        # To use the deprecated attribute, change the key to "deployment.environment".
+        # - name: deployment.environment.name
+        #   value: staging/production/...
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: '127.0.0.1'
+                port: 8888
+
+  extensions:
+  - headers_setter
+  - health_check
+  - http_forwarder
+  - http_forwarder/opamp_splunk_o11y
+  - opamp/splunk_o11y
+  - opamp/splunk_enterprise
+  - zpages
+  - file_storage/filelogs
+
+  pipelines:
+    traces:
+      receivers:
+      - jaeger
+      - otlp
+      - zipkin
+      processors:
+      - memory_limiter
+      - batch
+      - resource_detection
+      #- resource/add_environment
+      exporters:
+      # - otlp_http
+      # Use instead when sending to gateway
+      - otlp_http/gateway
+
+    metrics:
+      receivers:
+      - host_metrics
+      - otlp
+      processors:
+      - memory_limiter
+      - transform/limit_histogram_buckets
+      - batch
+      - resource_detection
+      - metricstransform
+      exporters:
+      # - signalfx
+      # Use instead when sending to gateway
+      - otlp_http/gateway
+      # Also send metrics to Splunk if splunk_hec_metrics_enabled = true (gets enabled in terraform config and script)
+      # - splunk_hec/metrics
+
+    metrics/internal:
+      receivers:
+      - prometheus/internal
+      processors:
+      - memory_limiter
+      - batch
+      - resource_detection
+      # When sending to gateway, at least one metrics pipeline needs
+      # to use signalfx exporter so host metadata gets emitted
+      exporters:
+      - signalfx
+
+    logs/signalfx:
+      receivers:
+      - smartagent/processlist
+      processors:
+      - memory_limiter
+      - batch
+      - resource_detection
+      exporters:
+      - signalfx
+
+    logs/entities:
+      # Receivers are dynamically added if discovery mode is enabled
+      receivers:
+      - nop
+      processors:
+      - memory_limiter
+      - batch
+      - resource_detection
+      exporters:
+      # - otlp_http/entities
+      # Use instead when sending to gateway
+      - otlp_http/gateway
+
+    logs:
+      receivers:
+      - fluent_forward
+      - otlp
+      - file_log/mysql-error
+      - file_log/mysql-query
+      - file_log/mysql-slow_query
+      - file_log/syslog
+      processors:
+      - memory_limiter
+      - batch
+      - resource_detection
+      - transform/splunk_metadata
+      #- resource/add_environment
+      exporters:
+      - splunk_hec
+      # - otlp_http/logs
+      # - otlp_grpc/logs
+      - splunk_hec/profiling
+      # Use instead when sending to gateway
+      # - otlp_http/gateway

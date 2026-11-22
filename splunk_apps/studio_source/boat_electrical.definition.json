@@ -1,0 +1,1061 @@
+{
+  "title": "Boat Electrical Data",
+  "description": "Tessa Jane electrical metrics ingested from Splunk Observability Cloud into sim_metrics.",
+  "inputs": {
+    "input_timerange": {
+      "type": "input.timerange",
+      "title": "Time range",
+      "options": {
+        "token": "global_time",
+        "defaultValue": "-24h,now"
+      }
+    }
+  },
+  "defaults": {
+    "dataSources": {
+      "ds.search": {
+        "options": {
+          "queryParameters": {
+            "earliest": "$global_time.earliest$",
+            "latest": "$global_time.latest$"
+          }
+        }
+      }
+    },
+    "visualizations": {
+      "global": {
+        "showLastUpdated": true
+      }
+    }
+  },
+  "visualizations": {
+    "viz_house_soc": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "House SOC",
+      "options": {
+        "accentColor": "#3fb950",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_house_soc"
+      }
+    },
+    "viz_house_v": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "House Battery",
+      "options": {
+        "accentColor": "#4e9cf5",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_house_v"
+      }
+    },
+    "viz_starter_v": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Starter Battery",
+      "options": {
+        "accentColor": "#58a6ff",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_starter_v"
+      }
+    },
+    "viz_bow_pwr": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Bow Solar Power",
+      "options": {
+        "accentColor": "#f5a623",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_bow_pwr"
+      }
+    },
+    "viz_bow_v": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Bow Solar Voltage",
+      "options": {
+        "accentColor": "#e67e22",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_bow_v"
+      }
+    },
+    "viz_bow_max_yest": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Bow Max Power Yesterday",
+      "options": {
+        "accentColor": "#1abc9c",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_bow_max_yest"
+      }
+    },
+    "viz_bow_max_today": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Bow Max Power Today",
+      "options": {
+        "accentColor": "#1abc9c",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_bow_max_today"
+      }
+    },
+    "viz_bow_yield_today": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Bow Yield Today",
+      "options": {
+        "accentColor": "#9b59b6",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_bow_yield_today"
+      }
+    },
+    "viz_bow_yield_yest": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Bow Yield Yesterday",
+      "options": {
+        "accentColor": "#8e44ad",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_bow_yield_yest"
+      }
+    },
+    "viz_mid_pwr": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Mid Solar Power",
+      "options": {
+        "accentColor": "#f5a623",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_mid_pwr"
+      }
+    },
+    "viz_mid_v": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Mid Solar Voltage",
+      "options": {
+        "accentColor": "#e67e22",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_mid_v"
+      }
+    },
+    "viz_mid_max_yest": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Mid Max Power Yesterday",
+      "options": {
+        "accentColor": "#1abc9c",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_mid_max_yest"
+      }
+    },
+    "viz_mid_max_today": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Mid Max Power Today",
+      "options": {
+        "accentColor": "#1abc9c",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_mid_max_today"
+      }
+    },
+    "viz_mid_yield_today": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Mid Yield Today",
+      "options": {
+        "accentColor": "#9b59b6",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_mid_yield_today"
+      }
+    },
+    "viz_mid_yield_yest": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Mid Yield Yesterday",
+      "options": {
+        "accentColor": "#8e44ad",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_mid_yield_yest"
+      }
+    },
+    "viz_stern_pwr": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Stern Solar Power",
+      "options": {
+        "accentColor": "#f5a623",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_stern_pwr"
+      }
+    },
+    "viz_stern_v": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Stern Solar Voltage",
+      "options": {
+        "accentColor": "#e67e22",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_stern_v"
+      }
+    },
+    "viz_stern_max_today": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Stern Max Power Today",
+      "options": {
+        "accentColor": "#1abc9c",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_stern_max_today"
+      }
+    },
+    "viz_stern_max_yest": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Stern Max Power Yesterday",
+      "options": {
+        "accentColor": "#1abc9c",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_stern_max_yest"
+      }
+    },
+    "viz_stern_yield_today": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Stern Yield Today",
+      "options": {
+        "accentColor": "#9b59b6",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_stern_yield_today"
+      }
+    },
+    "viz_stern_yield_yest": {
+      "type": "otel_demo_studio_viz.kpi_tile",
+      "title": "Stern Yield Yesterday",
+      "options": {
+        "accentColor": "#8e44ad",
+        "showTrend": false
+      },
+      "dataSources": {
+        "primary": "ds_stern_yield_yest"
+      }
+    },
+    "viz_soc_hist": {
+      "type": "splunk.line",
+      "title": "House Battery SOC History",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#3fb950"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "SOC %"
+      },
+      "dataSources": {
+        "primary": "ds_soc_hist"
+      }
+    },
+    "viz_batt_v": {
+      "type": "splunk.line",
+      "title": "Battery Voltages",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#4e9cf5",
+          "#e67e22",
+          "#9b59b6"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Voltage",
+        "yAxisMin": 12.5,
+        "yAxisMax": 15,
+        "overlayFields": "Relay",
+        "y2AxisTitleText": "Relay",
+        "y2AxisMin": 0,
+        "y2AxisMax": 2,
+        "showOverlayY2Axis": true
+      },
+      "dataSources": {
+        "primary": "ds_batt_v"
+      }
+    },
+    "viz_bow_va": {
+      "type": "splunk.line",
+      "title": "Bow Solar Volts & Amps",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#f5a623",
+          "#4e9cf5"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Voltage",
+        "yAxisMin": 12,
+        "yAxisMax": 50,
+        "overlayFields": "Current",
+        "y2AxisTitleText": "Current",
+        "y2AxisMin": 0,
+        "y2AxisMax": 10,
+        "showOverlayY2Axis": true
+      },
+      "dataSources": {
+        "primary": "ds_bow_va"
+      }
+    },
+    "viz_mid_va": {
+      "type": "splunk.line",
+      "title": "Mid Solar Volts & Amps",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#f5a623",
+          "#4e9cf5"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Voltage",
+        "yAxisMin": 12,
+        "yAxisMax": 25,
+        "overlayFields": "Current",
+        "y2AxisTitleText": "Current",
+        "y2AxisMin": 1,
+        "y2AxisMax": 15,
+        "showOverlayY2Axis": true
+      },
+      "dataSources": {
+        "primary": "ds_mid_va"
+      }
+    },
+    "viz_stern_va": {
+      "type": "splunk.line",
+      "title": "Stern Solar Volts & Amps",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#f5a623",
+          "#4e9cf5"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Voltage",
+        "yAxisMin": 12,
+        "yAxisMax": 25,
+        "overlayFields": "Current",
+        "y2AxisTitleText": "Current",
+        "y2AxisMin": 0,
+        "y2AxisMax": 10,
+        "showOverlayY2Axis": true
+      },
+      "dataSources": {
+        "primary": "ds_stern_va"
+      }
+    },
+    "viz_op_cpu": {
+      "type": "splunk.line",
+      "title": "OpenPlotter CPU Temperature",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#e74c3c"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Temp"
+      },
+      "dataSources": {
+        "primary": "ds_op_cpu"
+      }
+    },
+    "viz_venus_cpu": {
+      "type": "splunk.line",
+      "title": "Venus CPU Temp",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#e74c3c"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Temp"
+      },
+      "dataSources": {
+        "primary": "ds_venus_cpu"
+      }
+    },
+    "viz_cabin": {
+      "type": "splunk.line",
+      "title": "Cabin Temperature & Humidity",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#e67e22",
+          "#4e9cf5"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "Temperature",
+        "overlayFields": "Humidity",
+        "y2AxisTitleText": "Humidity",
+        "showOverlayY2Axis": true
+      },
+      "dataSources": {
+        "primary": "ds_cabin"
+      }
+    },
+    "viz_pressure": {
+      "type": "splunk.line",
+      "title": "Atmospheric Pressure",
+      "options": {
+        "legendDisplay": "right",
+        "legendTruncation": "ellipsisEnd",
+        "seriesColors": [
+          "#1abc9c"
+        ],
+        "nullValueDisplay": "gaps",
+        "yAxisTitleText": "hPa",
+        "yAxisMin": 970,
+        "yAxisMax": 1050
+      },
+      "dataSources": {
+        "primary": "ds_pressure"
+      }
+    }
+  },
+  "dataSources": {
+    "ds_kpis": {
+      "type": "ds.search",
+      "name": "Tessa Jane latest KPIs",
+      "options": {
+        "query": "| mstats latest(_value) as value where index=sim_metrics AND (metric_name=battery.soc.house OR metric_name=battery.voltage.house OR metric_name=battery.voltage.starter OR metric_name=solar.max.charge.today.bow OR metric_name=solar.max.charge.today.mid OR metric_name=solar.max.charge.today.stern OR metric_name=solar.max.charge.yesterday.bow OR metric_name=solar.max.charge.yesterday.mid OR metric_name=solar.max.charge.yesterday.stern OR metric_name=solar.max.yield.today.bow OR metric_name=solar.max.yield.today.mid OR metric_name=solar.power.bow OR metric_name=solar.power.mid OR metric_name=solar.power.stern OR metric_name=solar.voltage.bow OR metric_name=solar.voltage.mid OR metric_name=solar.voltage.stern OR metric_name=solar.yield.yesterday.bow OR metric_name=solar.yield.yesterday.mid OR metric_name=solar.yield.yesterday.stern) by metric_name",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_house_soc": {
+      "type": "ds.chain",
+      "name": "House SOC (%)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=battery.soc.house | eval label=\"House SOC (%)\", value=round(value,1)"
+      }
+    },
+    "ds_house_v": {
+      "type": "ds.chain",
+      "name": "House Battery (V)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=battery.voltage.house | eval label=\"House Battery (V)\", value=round(value,2)"
+      }
+    },
+    "ds_starter_v": {
+      "type": "ds.chain",
+      "name": "Starter Battery (V)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=battery.voltage.starter | eval label=\"Starter Battery (V)\", value=round(value,2)"
+      }
+    },
+    "ds_bow_pwr": {
+      "type": "ds.chain",
+      "name": "Bow Solar Power (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.power.bow | eval label=\"Bow Solar Power (W)\", value=round(value,1)"
+      }
+    },
+    "ds_bow_v": {
+      "type": "ds.chain",
+      "name": "Bow Solar Voltage (V)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.voltage.bow | eval label=\"Bow Solar Voltage (V)\", value=round(value,2)"
+      }
+    },
+    "ds_bow_max_yest": {
+      "type": "ds.chain",
+      "name": "Bow Max Power Yesterday (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.charge.yesterday.bow | eval label=\"Bow Max Power Yesterday (W)\", value=round(value,0)"
+      }
+    },
+    "ds_bow_max_today": {
+      "type": "ds.chain",
+      "name": "Bow Max Power Today (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.charge.today.bow | eval label=\"Bow Max Power Today (W)\", value=round(value,0)"
+      }
+    },
+    "ds_bow_yield_today": {
+      "type": "ds.chain",
+      "name": "Bow Yield Today (kWh)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.yield.today.bow | eval label=\"Bow Yield Today (kWh)\", value=round(value,2)"
+      }
+    },
+    "ds_bow_yield_yest": {
+      "type": "ds.chain",
+      "name": "Bow Yield Yesterday (kWh)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.yield.yesterday.bow | eval label=\"Bow Yield Yesterday (kWh)\", value=round(value,2)"
+      }
+    },
+    "ds_mid_pwr": {
+      "type": "ds.chain",
+      "name": "Mid Solar Power (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.power.mid | eval label=\"Mid Solar Power (W)\", value=round(value,1)"
+      }
+    },
+    "ds_mid_v": {
+      "type": "ds.chain",
+      "name": "Mid Solar Voltage (V)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.voltage.mid | eval label=\"Mid Solar Voltage (V)\", value=round(value,2)"
+      }
+    },
+    "ds_mid_max_yest": {
+      "type": "ds.chain",
+      "name": "Mid Max Power Yesterday (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.charge.yesterday.mid | eval label=\"Mid Max Power Yesterday (W)\", value=round(value,0)"
+      }
+    },
+    "ds_mid_max_today": {
+      "type": "ds.chain",
+      "name": "Mid Max Power Today (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.charge.today.mid | eval label=\"Mid Max Power Today (W)\", value=round(value,0)"
+      }
+    },
+    "ds_mid_yield_today": {
+      "type": "ds.chain",
+      "name": "Mid Yield Today (kWh)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.yield.today.mid | eval label=\"Mid Yield Today (kWh)\", value=round(value,2)"
+      }
+    },
+    "ds_mid_yield_yest": {
+      "type": "ds.chain",
+      "name": "Mid Yield Yesterday (kWh)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.yield.yesterday.mid | eval label=\"Mid Yield Yesterday (kWh)\", value=round(value,2)"
+      }
+    },
+    "ds_stern_pwr": {
+      "type": "ds.chain",
+      "name": "Stern Solar Power (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.power.stern | eval label=\"Stern Solar Power (W)\", value=round(value,1)"
+      }
+    },
+    "ds_stern_v": {
+      "type": "ds.chain",
+      "name": "Stern Solar Voltage (V)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.voltage.stern | eval label=\"Stern Solar Voltage (V)\", value=round(value,2)"
+      }
+    },
+    "ds_stern_max_today": {
+      "type": "ds.chain",
+      "name": "Stern Max Power Today (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.charge.today.stern | eval label=\"Stern Max Power Today (W)\", value=round(value,0)"
+      }
+    },
+    "ds_stern_max_yest": {
+      "type": "ds.chain",
+      "name": "Stern Max Power Yesterday (W)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.max.charge.yesterday.stern | eval label=\"Stern Max Power Yesterday (W)\", value=round(value,0)"
+      }
+    },
+    "ds_stern_yield_today": {
+      "type": "ds.chain",
+      "name": "Stern Yield Today (kWh)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.yield.yesterday.stern | eval label=\"Stern Yield Today (kWh)\", value=round(value,2)"
+      }
+    },
+    "ds_stern_yield_yest": {
+      "type": "ds.chain",
+      "name": "Stern Yield Yesterday (kWh)",
+      "options": {
+        "extend": "ds_kpis",
+        "query": "| search metric_name=solar.yield.yesterday.stern | eval label=\"Stern Yield Yesterday (kWh)\", value=round(value,2)"
+      }
+    },
+    "ds_soc_hist": {
+      "type": "ds.search",
+      "name": "House Battery SOC History",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=battery.soc.house) by metric_name | eval series=case(metric_name=\"battery.soc.house\", \"House SOC\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_batt_v": {
+      "type": "ds.search",
+      "name": "Battery Voltages",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=battery.voltage.house OR metric_name=battery.voltage.starter OR metric_name=bmv.relay.state) by metric_name | eval series=case(metric_name=\"battery.voltage.house\", \"House\", metric_name=\"battery.voltage.starter\", \"Starter\", metric_name=\"bmv.relay.state\", \"Relay\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_bow_va": {
+      "type": "ds.search",
+      "name": "Bow Solar Volts & Amps",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=solar.voltage.bow OR metric_name=battery.current.bow) by metric_name | eval series=case(metric_name=\"solar.voltage.bow\", \"Voltage\", metric_name=\"battery.current.bow\", \"Current\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_mid_va": {
+      "type": "ds.search",
+      "name": "Mid Solar Volts & Amps",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=solar.voltage.mid OR metric_name=battery.current.mid) by metric_name | eval series=case(metric_name=\"solar.voltage.mid\", \"Voltage\", metric_name=\"battery.current.mid\", \"Current\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_stern_va": {
+      "type": "ds.search",
+      "name": "Stern Solar Volts & Amps",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=solar.voltage.stern OR metric_name=battery.current.stern) by metric_name | eval series=case(metric_name=\"solar.voltage.stern\", \"Voltage\", metric_name=\"battery.current.stern\", \"Current\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_op_cpu": {
+      "type": "ds.search",
+      "name": "OpenPlotter CPU Temperature",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=openplotter.cpu.temperature) by metric_name | eval series=case(metric_name=\"openplotter.cpu.temperature\", \"OpenPlotter CPU\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_venus_cpu": {
+      "type": "ds.search",
+      "name": "Venus CPU Temp",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=venus.cpu.temp) by metric_name | eval series=case(metric_name=\"venus.cpu.temp\", \"Venus CPU\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_cabin": {
+      "type": "ds.search",
+      "name": "Cabin Temperature & Humidity",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=cabin.temp OR metric_name=cabin.humidity) by metric_name | eval series=case(metric_name=\"cabin.temp\", \"Temperature\", metric_name=\"cabin.humidity\", \"Humidity\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    },
+    "ds_pressure": {
+      "type": "ds.search",
+      "name": "Atmospheric Pressure",
+      "options": {
+        "query": "| mstats avg(_value) as value span=5m where index=sim_metrics AND (metric_name=cabin.pressure) by metric_name | eval series=case(metric_name=\"cabin.pressure\", \"Pressure\", true(), metric_name) | xyseries _time series value",
+        "queryParameters": {
+          "earliest": "$global_time.earliest$",
+          "latest": "$global_time.latest$"
+        },
+        "refresh": "60s",
+        "refreshType": "delay"
+      }
+    }
+  },
+  "layout": {
+    "type": "absolute",
+    "options": {
+      "width": 1440,
+      "height": 3080,
+      "display": "fit-to-width",
+      "backgroundColor": "#0e1117"
+    },
+    "globalInputs": [
+      "input_timerange"
+    ],
+    "structure": [
+      {
+        "item": "viz_house_soc",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 5,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_house_v",
+        "type": "block",
+        "position": {
+          "x": 245,
+          "y": 5,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_starter_v",
+        "type": "block",
+        "position": {
+          "x": 485,
+          "y": 5,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_bow_pwr",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 225,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_bow_v",
+        "type": "block",
+        "position": {
+          "x": 245,
+          "y": 225,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_bow_max_yest",
+        "type": "block",
+        "position": {
+          "x": 485,
+          "y": 225,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_bow_max_today",
+        "type": "block",
+        "position": {
+          "x": 725,
+          "y": 225,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_bow_yield_today",
+        "type": "block",
+        "position": {
+          "x": 965,
+          "y": 225,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_bow_yield_yest",
+        "type": "block",
+        "position": {
+          "x": 1205,
+          "y": 225,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_pwr",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 445,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_v",
+        "type": "block",
+        "position": {
+          "x": 245,
+          "y": 445,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_max_yest",
+        "type": "block",
+        "position": {
+          "x": 485,
+          "y": 445,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_max_today",
+        "type": "block",
+        "position": {
+          "x": 725,
+          "y": 445,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_yield_today",
+        "type": "block",
+        "position": {
+          "x": 965,
+          "y": 445,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_yield_yest",
+        "type": "block",
+        "position": {
+          "x": 1205,
+          "y": 445,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_pwr",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 665,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_v",
+        "type": "block",
+        "position": {
+          "x": 245,
+          "y": 665,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_max_today",
+        "type": "block",
+        "position": {
+          "x": 485,
+          "y": 665,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_max_yest",
+        "type": "block",
+        "position": {
+          "x": 725,
+          "y": 665,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_yield_today",
+        "type": "block",
+        "position": {
+          "x": 965,
+          "y": 665,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_yield_yest",
+        "type": "block",
+        "position": {
+          "x": 1205,
+          "y": 665,
+          "w": 230,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_soc_hist",
+        "type": "block",
+        "position": {
+          "x": 725,
+          "y": 5,
+          "w": 710,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_batt_v",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 885,
+          "w": 1430,
+          "h": 430
+        }
+      },
+      {
+        "item": "viz_bow_va",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 1325,
+          "w": 1430,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_mid_va",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 1545,
+          "w": 1430,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_stern_va",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 1765,
+          "w": 1430,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_op_cpu",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 1985,
+          "w": 710,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_venus_cpu",
+        "type": "block",
+        "position": {
+          "x": 725,
+          "y": 1985,
+          "w": 710,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_cabin",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 2205,
+          "w": 1430,
+          "h": 210
+        }
+      },
+      {
+        "item": "viz_pressure",
+        "type": "block",
+        "position": {
+          "x": 5,
+          "y": 2425,
+          "w": 1430,
+          "h": 650
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "showTitleAndDescription": false,
+  "includeInToolbar": true,
+  "includeInVizSwitcher": true,
+  "showDrilldown": true,
+  "canSetTokens": [],
+  "hasEventHandlers": true,
+  "config": {
+    "name": "KPI Tile",
+    "description": "Shows a label and numeric KPI from search results",
+    "category": "Custom",
+    "icon": null,
+    "dataContract": {
+      "requiredDataSources": ["primary"],
+      "optionalDataSources": []
+    },
+    "size": {
+      "initialWidth": 400,
+      "initialHeight": 280
+    },
+    "optionsSchema": {
+      "accentColor": {
+        "type": "string",
+        "default": "#4e9cf5"
+      },
+      "showTrend": {
+        "type": "boolean",
+        "default": true
+      }
+    },
+    "editorConfig": [
+      {
+        "label": "Appearance",
+        "layout": [
+          [
+            {
+              "label": "Accent color",
+              "editor": "editor.color",
+              "option": "accentColor"
+            }
+          ],
+          [
+            {
+              "label": "Show trend (delta)",
+              "editor": "editor.checkbox",
+              "option": "showTrend"
+            }
+          ]
+        ]
+      }
+    ]
+  }
+}

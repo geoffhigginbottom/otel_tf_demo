@@ -1,0 +1,5 @@
+<nav>
+  <view name="boat_electrical_glass" default="true" />
+  <view name="boat_electrical" />
+  <view name="kpi_tile_test" />
+</nav>

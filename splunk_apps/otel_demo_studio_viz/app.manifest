@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2.0.0",
+  "info": {
+    "title": "Boat Electrical",
+    "id": {
+      "name": "otel_demo_studio_viz",
+      "version": "0.1.0"
+    },
+    "author": [
+      {
+        "name": "geoffh"
+      }
+    ],
+    "description": "Tessa Jane electrical dashboard, glass table, and KPI Tile visualization",
+    "classification": {
+      "categories": [
+        "Custom"
+      ]
+    }
+  },
+  "supportedDeployments": [
+    "_standalone",
+    "_distributed",
+    "_search_head_clustering"
+  ],
+  "targetWorkloads": [
+    "_search_heads"
+  ]
+}

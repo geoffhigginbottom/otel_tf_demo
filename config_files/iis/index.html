@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A simple web page hosted on an IIS Server running in AWS</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.signalfx.com/o11y-gdi-rum/v0.22.0/splunk-otel-web.js" crossorigin="anonymous"></script>
+    <script>
+    fetch('config.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        return response.json();
+      })
+      .then(config => {
+        SplunkRum.init({
+            realm: config.realm,
+            rumAccessToken: config.rumAccessToken,
+            applicationName: config.applicationName,
+            deploymentEnvironment: config.deploymentEnvironment,
+            version: config.version,
+            globalAttributes: {
+                release: config.release
+            }
+        });
+      })
+      .catch(error => {
+        console.error("Failed to load config.json or initialize SplunkRum:", error);
+      });
+    </script>
+
+    <script src="https://cdn.signalfx.com/o11y-gdi-rum/v0.22.0/splunk-otel-web-session-recorder.js" crossorigin="anonymous"></script>
+    <script>
+    fetch('config.json')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+        return response.json();
+      })
+      .then(config => {
+        SplunkSessionRecorder.init({
+          app: config.applicationName,
+          realm: config.realm,
+          rumAccessToken: config.rumAccessToken,
+        });
+      })
+      .catch(error => {
+        console.error("Failed to load config.json or initialize SplunkRum:", error);
+      });
+    </script> 
+</head>
+<body>
+    <header>
+        <h1>Welcome to My Demo IIS Website</h1>
+        <nav>
+            <a href="index.html" id="homeLink">Home</a>
+            <a href="contact.html" id="contactLink">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <p>This is a simple web page hosted on an IIS Server running in AWS</p>
+    </main>
+</body>
+</html>
