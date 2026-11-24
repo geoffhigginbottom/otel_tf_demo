@@ -54,3 +54,5 @@ aws-auth.yaml
 .terraform.lock.hcl
 
 *.lic
+
+.cursor/
