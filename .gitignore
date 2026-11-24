@@ -56,3 +56,4 @@ aws-auth.yaml
 *.lic
 
 .cursor/
+.observe/
